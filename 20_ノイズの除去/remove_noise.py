@@ -47,6 +47,13 @@ def get_noise_docs(min_doc_count):
 
   return noise_doc
 
-file = open('noise_doc_tag.txt','w')
-file.write(','.join(get_noise_docs(5)))
+# file = open('noise_doc_tag.txt','w')
+# file.write(','.join(get_noise_docs(5)))
+# file.close()
+
+
+file = open('all_doc_tag.txt','w')
+for docs in get_target_doc_list(100):
+  file.write(','.join(docs)+'\n')
+
 file.close()

@@ -30,10 +30,10 @@ def draw_word_scatter():
 
   for i,item_vecs in enumerate(get_top_item_docs()):
     
-
+    # 閲覧履歴が3以上
     vecs = []
     for doc_key in item_vecs:
-      if model.docvecs.doctags[doc_key].word_count > 3:
+      if model.docvecs.doctags[doc_key].word_count > 0:
         vecs.append(model.docvecs[doc_key])
 
     # vecs = [model.docvecs[doc_key] for doc_key in item_vecs]
