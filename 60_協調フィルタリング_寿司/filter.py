@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-    filter.py
     寿司のレコメンド
 """
 
@@ -11,9 +10,8 @@ from logging import StreamHandler, Formatter, INFO,getLogger
 #####
 import numpy as np
 
-# 定数です
-BASE_DIR = "./60_協調フィルタリング"
-NUM_TRYSAIL = 3
+# 定数
+BASE_DIR = "./60_協調フィルタリング_寿司"
 logger = getLogger(__name__)
 
 # ログの設定
