@@ -7,9 +7,6 @@
 # 共通
 import time
 from logging import StreamHandler, Formatter, INFO,getLogger
-# 協調フィルタリング用ライブラリ
-from surprise import Reader, Dataset
-from surprise import SVD
 
 # 定数
 BASE_DIR = "./70_協調フィルタリング"
@@ -32,8 +29,8 @@ def conv_to_score(event_str):
 # Datasetロード用に'ユーザID アイテムID 評価値'のフォーマットへ変換してファイルに出力する
 def convert(input_file_name):
     output_file_name = input_file_name + '_converted' # 変換後のファイル名
-    output = ''
-    
+    output_list = []
+
     with open(input_file_name, mode='r') as f:
         lines = f.readlines()
         for line in lines:
@@ -43,11 +40,15 @@ def convert(input_file_name):
             user_id = columns[0]
             item_id = columns[2]
             event = conv_to_score(columns[1])
-            output += '{0:07d} {1:07d} {2:01d}\n'.format(int(user_id), int(item_id), int(event))
+            # TODO viewとadd_to_cartが両方あった場合の考慮
+            output_list.append('{0:07d} {1:07d} {2:01d}\n'.format(int(user_id), int(item_id), int(event)))
               
+    output_list_uniq = list(set(output_list))
+    output_list_uniq.sort()
+    
     # ファイル出力
-    with open(output_file_name, mode='w') as f: f.write(output)
-    return output_file_name
+    with open(output_file_name, mode='w') as f:
+        for line in output_list_uniq : f.write(line)
 
 def main():
     convert(BASE_DIR + './events.csv')

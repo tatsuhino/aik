@@ -65,8 +65,17 @@ def convert(input_file_name):
     with open(output_file_name, mode='w') as f: f.write(output)
     return output_file_name
 
-def evaluate(dataset):
+# 指定ユーザへのおすすめアイテムの上位N件を取得
+def get_predict_item_top_n(user_id,item_list, n):
+    predict_item_dic = {}
+    for item_id in item_list:
+        item_id_formatted = '{:02d}'.format(item_id)
+        predict_item_dic[item_id_formatted] = model.predict(uid=user_id, iid=item_id_formatted).est
+    
+    # print(predict_item_dic)
+    return sorted(predict_item_dic.items(), key=lambda x:x[1], reverse=True)[:n]
 
+def evaluate(dataset):
     # 全てのデータを使って学習
     trainset = dataset.build_full_trainset()
     model.fit(trainset)
@@ -83,11 +92,15 @@ def evaluate(dataset):
     user_id = '{:04d}'.format(0)
     item_id = '{:02d}'.format(0)
 
-    prediction = model.predict(uid=user_id, iid=item_id)
+    print(get_predict_item_top_n(user_id,trainset.all_items(),10))
 
-    logger.info('Predicted rating(User: {0}, Item: {1}): {2:.2f}'
-            .format(prediction.uid, prediction.iid, prediction.est))
-            
+    # prediction = model.predict(uid=user_id, iid=item_id)
+    # logger.info('Predicted rating(User: {0}, Item: {1}): {2:.2f}'
+    #         .format(prediction.uid, prediction.iid, prediction.est))
+
+    
+
+    
 def main():
     # output_file_name = convert(BASE_DIR + './sushi3b.5000.10.score')
 
