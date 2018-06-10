@@ -50,6 +50,7 @@ def main():
         # modelの作成 TODO:分類機はいろいろ精度を試してみる
         model = SVD()
         model.fit(trainset)
+        logger.info("モデル学習完了")
 
         # TODO １ユーザに対して最大でもX回までしか評価しないようにtestセットから除く
         hit_count=0
@@ -61,13 +62,11 @@ def main():
             if score == 1 : continue # viewならスキップ
             # add_to_cartしている場合、そのアイテムがユーザのおすすめアイテムに入っていればHITとカウントする。
             predict_item = get_predict_item_top_n(model,user_id,all_item_set.all_items(),10)
-            # print("predict_item:",predict_item, " item_id:",item_id)
-
             if item_id in predict_item: hit_count += 1
      
-        print("評価履歴数:",str(len(testset)))
-        print("ヒット数:",str(hit_count))
-        print("ヒット率:",hit_count / len(testset))
+        logger.info("[評価履歴数]",str(len(testset)))
+        logger.info("[ヒット数]",str(hit_count))
+        logger.info("[ヒット率]",hit_count / len(testset))
         
 if __name__ == "__main__":
     init_logger()
