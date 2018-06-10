@@ -84,7 +84,7 @@ def main():
     logger.info('Predict score: {:.3f}'.format(predict(scores, similarities, target_user_index, target_item_index)))
 
     rank = rank_items(scores, similarities, target_user_index)
-    print('Ranking: {}'.format(rank))
+    logger.info('Ranking: {}'.format(rank))
 
 if __name__ == "__main__":
     init_logger()
