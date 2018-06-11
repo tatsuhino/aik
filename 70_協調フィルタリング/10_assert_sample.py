@@ -10,6 +10,7 @@ from logging import StreamHandler, Formatter, INFO,getLogger
 # 協調フィルタリング用ライブラリ
 from surprise import Reader, Dataset
 from surprise import SVD
+from concurrent.futures import ThreadPoolExecutor
 
 # 定数
 BASE_DIR = "./70_協調フィルタリング"
@@ -34,9 +35,15 @@ def get_predict_item_top_n(model,user_id,item_list, n):
     
     # item_idとスコアのリスト [('0000002', 1.4807729911119272), ('0000003', 1.4807729911119272)]
     sorted_dic = sorted(predict_item_dic.items(), key=lambda x:x[1], reverse=True)[:n]
+    logger.info("予想アイテム:"+str(sorted_dic))
     # item_idのみのリストとして返却
     return [item_id_tapple[0] for item_id_tapple in sorted_dic]
 
+def is_hit(model, user_id,item_id,item_list):
+    predict_item = get_predict_item_top_n(model,user_id,item_list,10)
+    logger.info("user_id:"+user_id+" buy_item_id:"+item_id+" predict_items:" + str(predict_item))
+    if item_id in predict_item: return True
+                
 def main():
     data_file = BASE_DIR + './events.sample.csv_converted'
     reader = Reader(line_format='user item rating', sep=' ')
@@ -54,19 +61,28 @@ def main():
 
         # TODO １ユーザに対して最大でもX回までしか評価しないようにtestセットから除く
         hit_count=0
-        for test_data in testset:
-            user_id = '{:07d}'.format(int(test_data[0]))
-            item_id = '{:07d}'.format(int(test_data[1]))
-            score = test_data[2]
+        futures = []
 
-            if score == 1 : continue # viewならスキップ
-            # add_to_cartしている場合、そのアイテムがユーザのおすすめアイテムに入っていればHITとカウントする。
-            predict_item = get_predict_item_top_n(model,user_id,all_item_set.all_items(),10)
-            if item_id in predict_item: hit_count += 1
-     
-        logger.info("[評価履歴数]",str(len(testset)))
-        logger.info("[ヒット数]",str(hit_count))
-        logger.info("[ヒット率]",hit_count / len(testset))
+        with ThreadPoolExecutor(max_workers=8, thread_name_prefix="thread") as executor:
+            for test_data in testset:
+                user_id = '{:07d}'.format(int(test_data[0]))
+                item_id = '{:07d}'.format(int(test_data[1]))
+                score = test_data[2]
+
+                if score != 2 : continue # add_to_cart以外ならスキップ
+                # add_to_cartしている場合、そのアイテムがユーザのおすすめアイテムに入っていればHITとカウントする。
+                futures.append(executor.submit(is_hit,model,user_id,item_id,all_item_set.all_items()))
+
+            # マルチスレッド処理の待ち合わせ
+            for f in futures:
+                if f.result() : hit_count += 1
+
+        # 評価の印字
+        test_buy_item_count = len([x for x in testset if x[2]==2])
+        logger.info("[評価履歴数]" + str(test_buy_item_count))
+        logger.info("[ヒット数]" + str(hit_count))
+        if test_buy_item_count!=0 : 
+            logger.info("[ヒット率]" + str(hit_count / test_buy_item_count))
         
 if __name__ == "__main__":
     init_logger()
