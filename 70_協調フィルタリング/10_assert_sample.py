@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """
     モデルの構築から検証までを一括して行う。
+    https://qiita.com/ysekky/items/c81ff24da0390a74fc6c
 """
 
 # 共通
