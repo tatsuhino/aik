@@ -2,6 +2,24 @@
 # -*- coding: utf-8 -*-
 """
     モデルの構築から検証までを一括して行う。
+行列因子分解（Matrix Factorization）モデル
+    ユーザ・アイテム行列をユーザ行列（user × k）とアイテム行列（item × k）に分解する際、既に値があるセルの値の誤差が最小になるようにする
+        分解した後の行列の積をとって元に戻した際、値の入っていなかったセルに値が入っており、その値を評価値とする
+    特異値分解（SVD：Singular Value Decomposition）
+    非負値行列因子分解（NMF：Non-negative Matrix Factorization）
+        SVDと異なり、分解した行列の要素が全て正の数
+        交互最小二乗法（ALS：Alternative Least Squares）や確率的勾配降下法（SGD：Stochastic Gradient Descent）を用いて実施
+クラスタモデル
+    嗜好が類似した利用者のグループごとに推薦をする
+関数モデル
+    利用者の嗜好パターンから，アイテムの評価値を予測する関数
+確率モデル
+    行動分布型：どの利用者が，どのアイテムを，どう評価したかの分布をモデル化
+    評価分布型：全アイテムに対する評価値の同時分布をモデル化
+    ナイーブベイズ、ベイジアンネットワークなど
+時系列モデル
+    マルコフ過程：アイテムを評価した時間的順序も考慮
+    マルコフ決定過程(MDP：Markov Decision Process)：加えて，利用者の行動もモデル化
 """
 
 # 共通
@@ -45,7 +63,7 @@ def is_hit(model, user_id,item_id,item_list):
     if item_id in predict_item: return True
                 
 def main():
-    data_file = BASE_DIR + './events.sample.csv_converted'
+    data_file = BASE_DIR + './events.csv_converted'
     reader = Reader(line_format='user item rating', sep=' ')
     dataset = Dataset.load_from_file(data_file, reader=reader)
     all_item_set = dataset.build_full_trainset()
