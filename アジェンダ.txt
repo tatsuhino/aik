@@ -68,3 +68,72 @@
 ・Doc2Vecの履歴
 
 ■■まとめ
+
+
+
+=============================
+def convert(input_file_name):
+"""
+'ユーザID アイテムID 評価値'のフォーマットへ変換してファイルに出力する
+"""
+output_file_name = input_file_name + '_converted' # 変換後のファイル名
+output = ''
+
+with open(input_file_name, mode='r') as f:
+lines = f.readlines()
+
+user_id = 0
+for line in lines:
+words = line.strip().split(' ')
+for item_id, word in enumerate(words):
+score = int(word)
+if score != -1:
+output += '{0:04d} {1:02d} {2:01d}\n'.format(user_id, item_id, score)
+
+user_id += 1
+
+with open(output_file_name, mode='w') as f:
+f.write(output)
+
+return output_file_name
+
+
+file_name = convert('/tmp/sushi3-2016/sushi3b.5000.10.score')
+
+=============================
+
+その後、一つ目のアルゴリズムとして、SVDアルゴリズムに関してパラメータの最適化を行います。
+
+===============================
+from surprise import SVD
+from surprise import Dataset
+from surprise import Reader
+from surprise.model_selection import GridSearchCV
+
+# Use 'sushi3b.5000.10.score_converted'
+reader = Reader(line_format='user item rating', sep=' ')
+data = Dataset.load_from_file(file_name, reader=reader)
+
+param_grid = {'n_epochs': [5, 10], 'lr_all': [0.002, 0.005],
+'reg_all': [0.4, 0.6]}
+gs = GridSearchCV(SVD, param_grid, measures=['rmse', 'mae'], cv=10)
+
+gs.fit(data)
+
+# best RMSE score
+print(gs.best_score['rmse'])
+
+# combination of parameters that gave the best RMSE score
+print(gs.best_params['rmse'])
+
+print(gs.cv_results)
+===============================
+
+このSVD以外にも、SVDppとかNMFとか色々あります。
+注意してほしいのは、アルゴリズムが変わるとパラメータが変わることです。
+
+上のparam_gridでは、'n_epochs'と'lr_all'と'reg_all'の3つを変動させていますが、これはSVDのパラメータであって、それ以外のアルゴリズムでは変わります。
+
+以下を参考に、どんなパラメータがあるのか、その範囲をどう設定すればいいのか勉強してください。
+http://surprise.readthedocs.io/en/stable/prediction_algorithms_package.html
+

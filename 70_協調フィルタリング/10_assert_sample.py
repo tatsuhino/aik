@@ -20,6 +20,7 @@
 時系列モデル
     マルコフ過程：アイテムを評価した時間的順序も考慮
     マルコフ決定過程(MDP：Markov Decision Process)：加えて，利用者の行動もモデル化
+    https://qiita.com/ysekky/items/c81ff24da0390a74fc6c
 """
 
 # 共通
@@ -63,6 +64,7 @@ def is_hit(model, user_id,item_id,item_list):
     if item_id in predict_item: return True
                 
 def main():
+    data_file = BASE_DIR + './events.sample.csv_converted'
     data_file = BASE_DIR + './events.csv_converted'
     reader = Reader(line_format='user item rating', sep=' ')
     dataset = Dataset.load_from_file(data_file, reader=reader)
