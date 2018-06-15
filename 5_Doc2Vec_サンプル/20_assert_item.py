@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-    DOC2VECで学習＋評価。閲覧履歴をベクトル化する手法
+    DOC2VECで学習＋評価。アイテムをベクトル化し、ユーザが購入する直前のアイテムに似ているアイテムを表示する手法
 """
-
 
 # 共通
 import time
@@ -41,11 +40,30 @@ def init_logger():
     logger.addHandler(handler)
     logger.setLevel(INFO)
 
-# 指定ユーザへのおすすめアイテムの上位N件を取得
+# おすすめアイテムの上位N件を取得(購入直前のアイテム２つに対して、類似のアイテムを取得)
 def get_predict_item_top_n(model,test_data_line_dict, n):
-    history_vec = model.infer_vector(test_data_line_dict["view_items"])
-    sim_vecs = model.docvecs.most_similar([history_vec],topn=n)
-    return [vec[0].split("_")[1] for vec in sim_vecs]
+    except_buy_item_history = list(filter(lambda item: item != test_data_line_dict["buy_item"], test_data_line_dict["view_items"]))
+    # 購入の直前に見たアイテムから操作する
+    except_buy_item_history.reverse()
+
+    predict_dict = {}
+    predict_dict["exceed_sim_vecs"] = []
+    predict_dict["sim_vecs"] = []
+    for item in except_buy_item_history :
+        try:
+            predict_item = model.most_similar(positive=str(item),topn=int(n))
+            predict_dict["exceed_sim_vecs"].extend(predict_item)
+            predict_dict["sim_vecs"].extend(predict_item[:int(n/2 + n%2)]) # TODO 直近２件を決め打ちなロジック
+            if len(predict_dict["exceed_sim_vecs"]) >= (n*2): break
+        except KeyError: continue # ボキャブラリーに該当itemが存在しない場合
+    
+    # 予想アイテム数がnを超える前にループを抜けた場合は、exceed_sim_vecsから持ってくる
+    if len(predict_dict["sim_vecs"]) < n:
+        predict_dict["sim_vecs"].extend(predict_dict["exceed_sim_vecs"])
+    if len(predict_dict["sim_vecs"]) == 0 : return [] 
+
+    all_predict_item = [vec[0] for vec in predict_dict["sim_vecs"]]
+    return list(set(all_predict_item))[:n]
 
 # 検証
 def is_hit(model,test_data_line_dict):

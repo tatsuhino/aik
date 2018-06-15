@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-    データの整形
+    DOC2VEC用データの整形
 """
 
 # 共通
@@ -41,13 +41,16 @@ def convert(input_file_name):
 
             action_history["user_id"] = '{0:07d}'.format(int(columns[0]))
             action_history.setdefault("action_to_buy", [])
-            action_history["action_to_buy"].append('{0:07d}'.format(int(columns[2])))
+            item_id = '{0:07d}'.format(int(columns[2]))
+            action_history["action_to_buy"].append(item_id)
             
-            if  len(set(action_history["action_to_buy"])) > 2 and columns[1] == "addtocart":
-                all_data.append(action_history)
-                action_history = {}
-            elif len(action_history["action_to_buy"]) == 2 and columns[1] == "addtocart":
-                action_history = {}
+            if  columns[1] == "addtocart":
+                # 履歴の中から、重複と購入アイテムのIDを除いたサイズが3以上のもののみ抽出する
+                if len(set(filter(lambda item: item != item_id, action_history["action_to_buy"]))) > 1:
+                    all_data.append(action_history)
+                    action_history = {}
+                else:
+                    action_history = {}
             
             preUserId = columns[0]
 
