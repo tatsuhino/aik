@@ -19,7 +19,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
 
 # 定数
-BASE_DIR = "./5_Doc2Vec_サンプル"
+BASE_DIR = "./10_Doc2Vec"
 
 # グローバル変数
 logger = getLogger(__name__)
@@ -27,9 +27,9 @@ logger = getLogger(__name__)
 # 実行時引数
 parser = argparse.ArgumentParser()
 # Doc2Vec学習パラメータ
-parser.add_argument('-vector_size', default=100, type=int) # ベクトルの次元数
+parser.add_argument('-vector_size', default=200, type=int) # ベクトルの次元数
 parser.add_argument('-min_count', default=2, type=int) # 出現数がmin_count以下のアイテムIDは無視する
-parser.add_argument('-epochs', default=55, type=int) # 一つの訓練データを何回繰り返して学習させるか(多すぎると過学習となる)
+parser.add_argument('-epochs', default=50, type=int) # 一つの訓練データを何回繰り返して学習させるか(多すぎると過学習となる)
 args = parser.parse_args()
 
 # ログの設定
@@ -53,7 +53,7 @@ def get_predict_item_top_n(model,test_data_line_dict, n):
         try:
             predict_item = model.most_similar(positive=str(item),topn=int(n))
             predict_dict["exceed_sim_vecs"].extend(predict_item)
-            predict_dict["sim_vecs"].extend(predict_item[:int(n/2 + n%2)]) # TODO 直近２件を決め打ちなロジック
+            predict_dict["sim_vecs"].extend(predict_item[:int(n/2 + n%2)]) # TODO 直近２件決め打ちなロジック
             if len(predict_dict["exceed_sim_vecs"]) >= (n*2): break
         except KeyError: continue # ボキャブラリーに該当itemが存在しない場合
     

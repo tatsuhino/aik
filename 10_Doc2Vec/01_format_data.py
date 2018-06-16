@@ -10,7 +10,7 @@ from logging import StreamHandler, Formatter, INFO,getLogger
 from collections import defaultdict
 
 # 定数
-BASE_DIR = "./5_Doc2Vec_サンプル"
+BASE_DIR = "./10_Doc2Vec"
 
 # グローバル変数
 logger = getLogger(__name__)
@@ -45,7 +45,7 @@ def convert(input_file_name):
             action_history["action_to_buy"].append(item_id)
             
             if  columns[1] == "addtocart":
-                # 履歴の中から、重複と購入アイテムのIDを除いたサイズが3以上のもののみ抽出する
+                # 履歴の中から、重複と購入アイテムのIDを除いたサイズが2以上のもののみ抽出する
                 if len(set(filter(lambda item: item != item_id, action_history["action_to_buy"]))) > 1:
                     all_data.append(action_history)
                     action_history = {}
