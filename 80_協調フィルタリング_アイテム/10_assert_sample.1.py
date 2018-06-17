@@ -15,6 +15,7 @@ from concurrent.futures import ThreadPoolExecutor
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
+import pickle
 
 # 定数
 BASE_DIR = "./80_協調フィルタリング_アイテム"
@@ -48,8 +49,30 @@ def is_hit(model, user_id,item_id,item_list):
     logger.info("user_id:"+user_id+" buy_item_id:"+item_id+" predict_items:" + str(predict_item))
     if item_id in predict_item: return True
 
+def get_similarities_list(trainset, similarities, n):
+    """
+    データ加工用のfunction PageURL をキー、評価の降順にソートされた Taple のリストをValue として持つ辞書 を作成する
+    """
+    results = {}
+    for index1, elems in enumerate(similarities):
+        # to_raw_iid で、similarities の配列のインデックスから、item id　を取得できる
+        raw_id1 = trainset.to_raw_iid(index1)
+        data = {}
+        for index2, elem in enumerate(elems):
+            # index値が同じデータは、同一記事なので、除外
+            if index1 == index2:
+                continue
+            raw_id2 = trainset.to_raw_iid(index2)
+            # 評価が0.5以下は除外する
+            if elem <= 0.5:
+                continue
+            data.update({raw_id2 : elem})
+        results.update({raw_id1 : sorted(data.items(), key=lambda x: -x[1], reverse=True)[:n]})
+
+    return results
+
 # おすすめアイテムの上位N件                             を取得(購入直前のアイテム２つに対して、類似のアイテムを取得)
-def get_predict_item_top_n(model,test_data_line, n):
+def get_predict_item_top_n(test_data_line,sim_list, n):
     buy_item = test_data_line.pop()
     # 購入の直前に見たアイテムから操作する
     test_data_line.reverse()
@@ -60,17 +83,12 @@ def get_predict_item_top_n(model,test_data_line, n):
     for item in test_data_line :
         if item == buy_item: continue
         try:
-            inner_id = model.trainset.to_inner_iid(item)
-            predict_item = model.get_neighbors(inner_id, k=int(n))
-            predict_item = [model.trainset.to_raw_iid(inner_id)
-                       for inner_id in predict_item]
+            predict_item = sim_list[item]
             print(predict_item)
-
             predict_dict["exceed_sim_vecs"].extend(predict_item)
             predict_dict["sim_vecs"].extend(predict_item[:int(n/2 + n%2)]) # TODO 直近２件決め打ちなロジック
             if len(predict_dict["exceed_sim_vecs"]) >= (n*2): break
         except KeyError: continue # ボキャブラリーに該当itemが存在しない場合
-        except ValueError: continue # ボキャブラリーに該当itemが存在しない場合
     
     # 予想アイテム数がnを超える前にループを抜けた場合は、exceed_sim_vecsから持ってくる
     if len(predict_dict["sim_vecs"]) < n:
@@ -136,7 +154,9 @@ def main():
 
         similarities = model.compute_similarities()
         logger.info("モデル学習完了")
-
+        
+        sim_list = get_similarities_list(trainset, similarities,10)
+        logger.info(sim_list)
         hit_count=0
         for test_data in test_data_list:
             for v in test_data.values() : line_value = v
@@ -144,7 +164,7 @@ def main():
             buy_item_id = test_line[-1]
             # pre_buy_item_id = line_value.split(",")[1].split(" ")[-2]
 
-            predict_list = get_predict_item_top_n(model, test_line,10)
+            predict_list = get_predict_item_top_n(test_line,sim_list,10)
             if buy_item_id in predict_list : hit_count += 1
 
         # 評価の印字
