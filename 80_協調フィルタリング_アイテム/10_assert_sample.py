@@ -42,6 +42,24 @@ def init_logger():
 #     # logger.info("予想アイテム:"+str(sorted_dic))
 #     # item_idのみのリストとして返却
 #     return [item_id_tapple[0] for item_id_tapple in sorted_dic]
+# ユーザのイベント(view,addtocart)をスコア値に変換する
+def eval_score(all_data):
+    for val in all_data.values():
+        view_count = val["event"].count("view")
+        buy_count = val["event"].count("addtocart")
+
+        if buy_count >= 2:
+            val["score"] = 5
+        elif buy_count == 1:
+            val["score"] = 4
+        elif view_count >= 4:
+            val["score"] = 3
+        elif view_count >= 2:
+            val["score"] = 2
+        else:
+            val["score"] = 1
+
+    return all_data.values()
 
 def is_hit(model, user_id,item_id,item_list):
     predict_item = get_predict_item_top_n(model,user_id,item_list,10)
@@ -80,22 +98,30 @@ def get_predict_item_top_n(model,test_data_line, n):
     all_predict_item = [vec[0] for vec in predict_dict["sim_vecs"]]
     return list(set(all_predict_item))[:n]
 
-
 def export_format_data(all_data_before):
-    all_data = []
+    all_data = {}
     for line in all_data_before:
         for v in line.values() : line_value = v
         user_id = line_value.split(",")[0]
         item_ids = line_value.split(",")[1].split(" ")
         # view,view,addtocart
-        for item_id in item_ids[:-1]: all_data.append('{} {} {}'.format(user_id,item_id,"1"))
-        all_data.append('{} {} {}'.format(user_id,item_ids[-1].replace('\n',''),"2"))
-    
+        for i, item_id in enumerate(item_ids): 
+            key = user_id + "_" + item_id
+            all_data.setdefault(key, {})
+            all_data[key]["user_id"] = user_id
+            all_data[key]["item_id"] = item_id
+            all_data[key].setdefault("event", [])
+            if (i+1) == len(item_ids): 
+                all_data[key]["event"].append("addtocart")
+            else: 
+                all_data[key]["event"].append("view")
+
     train_tmp_file = BASE_DIR +"/tmp"
    # os.remove(train_tmp_file)
     # ファイル出力
     with open(train_tmp_file, mode='w') as f:
-        for line in all_data : f.write(line+"\n")
+        for line in eval_score(all_data) : 
+            f.write('{0:07d} {1:07d} {2:01d}\n'.format(int(line["user_id"]), int(line["item_id"]), int(line["score"])))
     
     return train_tmp_file
 
@@ -128,12 +154,8 @@ def main():
         sim_options = {'name': 'pearson_baseline', 'user_based': False}
         model = KNNBaseline(sim_options=sim_options)
         model.fit(trainset)
-
         # pickle.dump(model, open("model", 'wb'))
-
-        # # 保存したモデルをロードする
         # loaded_model = pickle.load(open("model, 'rb'))
-
         similarities = model.compute_similarities()
         logger.info("モデル学習完了")
 
