@@ -37,9 +37,9 @@ def eval_score(all_data):
 
         if buy_count >= 2:
             val["score"] = 5
-        elif buy_count == 1:
+        elif buy_count == 1 or view_count >= 4:
             val["score"] = 4
-        elif view_count >= 4:
+        elif view_count >= 3:
             val["score"] = 3
         elif view_count >= 2:
             val["score"] = 2

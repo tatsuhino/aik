@@ -79,7 +79,7 @@ def get_predict_item_top_n(model,test_data_line, n):
         if item == buy_item: continue
         try:
             inner_id = model.trainset.to_inner_iid(item)
-            predict_item = model.get_neighbors(inner_id, k=int(n))
+            predict_item = model.get_neighbors(inner_id, k=int(5))
             predict_item = [model.trainset.to_raw_iid(inner_id)
                        for inner_id in predict_item]
             print(predict_item)
@@ -151,8 +151,11 @@ def main():
         # model = KNNBasic(sim_options=sim_options)
         # model.fit(trainset)
 
-        sim_options = {'name': 'pearson_baseline', 'user_based': False}
-        model = KNNBaseline(sim_options=sim_options)
+        sim_options = {'name': 'pearson_baseline', 'user_based': False , 'shrinkage': 0}
+        model = KNNBasic(sim_options=sim_options)
+
+        # sim_options = {'name': 'pearson_baseline', 'user_based': False}
+        # model = KNNBaseline(sim_options=sim_options)
         model.fit(trainset)
         # pickle.dump(model, open("model", 'wb'))
         # loaded_model = pickle.load(open("model, 'rb'))
