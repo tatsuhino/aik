@@ -119,6 +119,7 @@ def main():
         logger.info(">>>ヒット率]" + str(hit_count / len(test_data)))
         hit_count_all += hit_count
         logger.info(">>>>>>[交差検証終了]")
+        break
     
     logger.info("------------------------------------------------")
     # 総合評価

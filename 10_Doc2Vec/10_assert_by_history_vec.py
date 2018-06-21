@@ -49,7 +49,9 @@ def get_predict_item_top_n(model,test_data_line_dict, n):
 
 # 検証
 def is_hit(model,test_data_line_dict):
+    # predict_start = time.time()
     predict_item = get_predict_item_top_n(model,test_data_line_dict,10)
+    # logger.info("[PREDICT TIME]:{0:.5f}".format(time.time() - predict_start) + "(sec)")
     if test_data_line_dict["buy_item"] in predict_item: return True
 
 # 学習
@@ -89,7 +91,9 @@ def main():
         # 学習
         train_data = [all_data[i] for i in train_index]
         test_data = [all_data[i] for i in test_index]
+        train_start = time.time()
         model = train(train_data)
+        logger.info("[TRAIN TIME]:{0:.5f}".format(time.time() - train_start) + "(sec)")
         logger.info(">>>[モデル学習完了]")
         # 評価
         hit_count = 0
@@ -101,6 +105,7 @@ def main():
         logger.info(">>>ヒット率]" + str(hit_count / len(test_data)))
         hit_count_all += hit_count
         logger.info(">>>>>>[交差検証終了]")
+        break
     
     logger.info("------------------------------------------------")
     # 総合評価

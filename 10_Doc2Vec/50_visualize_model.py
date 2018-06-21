@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
 # 定数
-BASE_DIR = "./5_Doc2Vec_サンプル"
+BASE_DIR = "./10_Doc2Vec"
 
 # グローバル変数
 logger = getLogger(__name__)

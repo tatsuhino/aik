@@ -25,7 +25,6 @@
 
 # 共通
 import time
-from collections import defaultdict
 from logging import StreamHandler, Formatter, INFO,getLogger
 # 協調フィルタリング用ライブラリ
 from surprise import Reader, Dataset
@@ -46,27 +45,23 @@ def init_logger():
     logger.addHandler(handler)
     logger.setLevel(INFO)
 
+# 指定ユーザへのおすすめアイテムの上位N件を取得
+def get_predict_item_top_n(model,user_id,item_list, n):
+    predict_item_dic = {}
+    for item_id in item_list:
+        item_id_formatted = '{:07d}'.format(item_id)
+        predict_item_dic[item_id_formatted] = model.predict(uid=user_id, iid=item_id_formatted).est
+    
+    # item_idとスコアのリスト [('0000002', 1.4807729911119272), ('0000003', 1.4807729911119272)]
+    sorted_dic = sorted(predict_item_dic.items(), key=lambda x:x[1], reverse=True)[:n]
+    logger.info("予想アイテム:"+str(sorted_dic))
+    # item_idのみのリストとして返却
+    return [item_id_tapple[0] for item_id_tapple in sorted_dic]
 
-def get_top_n(predictions, n=10):
-
-    # First map the predictions to each user.
-    top_n = defaultdict(list)
-    for uid, iid, true_r, est, _ in predictions:
-        top_n[uid].append((iid, est))
-
-    # Then sort the predictions for each user and retrieve the k highest ones.
-    for uid, user_ratings in top_n.items():
-        user_ratings.sort(key=lambda x: x[1], reverse=True)
-        top_n[uid] = user_ratings[:n]
-
-    return top_n
-
-def is_hit(predictions, user_id,item_id):
-    predict_start = time.time()
-    top_n = get_top_n(predictions, n=10)
-    logger.info("[PREDICT TIME]:{0:.5f}".format(time.time() - predict_start) + "(sec)")
-    logger.info("user_id:"+user_id+" buy_item_id:"+item_id+" predict_items:" + str(top_n[user_id]))
-    if item_id in top_n[user_id]: return True
+def is_hit(model, user_id,item_id,item_list):
+    predict_item = get_predict_item_top_n(model,user_id,item_list,10)
+    logger.info("user_id:"+user_id+" buy_item_id:"+item_id+" predict_items:" + str(predict_item))
+    if item_id in predict_item: return True
                 
 def main():
     data_file = BASE_DIR + './events.sample.csv_converted'
@@ -80,28 +75,23 @@ def main():
     for trainset, testset in dataset.folds():
         logger.info("[交差検証　START]------------------------------------------------")
         # modelの作成 TODO:分類機はいろいろ精度を試してみる
-        train_start = time.time()
         model = SVD()
         model.fit(trainset)
-        logger.info("[TRAIN TIME]:{0:.5f}".format(time.time() - train_start) + "(sec)")
         logger.info("モデル学習完了")
 
-        # 予測セットの印字
-        predictions = model.test(trainset.build_anti_testset())
-        # for uid, user_ratings in top_n.items():
-        #     print(uid, [iid for (iid, _) in user_ratings])
-            
         # TODO １ユーザに対して最大でもX回までしか評価しないようにtestセットから除く
         hit_count=0
         futures = []
+
         with ThreadPoolExecutor(max_workers=8, thread_name_prefix="thread") as executor:
             for test_data in testset:
                 user_id = '{:07d}'.format(int(test_data[0]))
                 item_id = '{:07d}'.format(int(test_data[1]))
                 score = test_data[2]
-                if score <= 3 : continue # add_to_cart以外ならスキップ
+
+                if score != 2 : continue # add_to_cart以外ならスキップ
                 # add_to_cartしている場合、そのアイテムがユーザのおすすめアイテムに入っていればHITとカウントする。
-                futures.append(executor.submit(is_hit,predictions,user_id,item_id))
+                futures.append(executor.submit(is_hit,model,user_id,item_id,all_item_set.all_items()))
 
             # マルチスレッド処理の待ち合わせ
             for f in futures:
