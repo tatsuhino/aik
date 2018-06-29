@@ -61,7 +61,7 @@ def is_hit(model, user_id,item_id,item_list):
     predict_start = time.time()
     predict_item = get_predict_item_top_n(model,user_id,item_list,10)
     logger.info("[PREDICT TIME]:{0:.5f}".format(time.time() - predict_start) + "(sec)")
-    logger.info("user_id:"+user_id+" buy_item_id:"+item_id+" predict_items:" + str(predict_item))
+    # logger.info("user_id:"+user_id+" buy_item_id:"+item_id+" predict_items:" + str(predict_item))
     if item_id in predict_item: return True
                 
 def main():
@@ -77,7 +77,9 @@ def main():
         logger.info("[交差検証　START]------------------------------------------------")
         # modelの作成 TODO:分類機はいろいろ精度を試してみる
         model = SVD()
+        train_start = time.time()
         model.fit(trainset)
+        logger.info("[TRAIN TIME]:{0:.5f}".format(time.time() - train_start) + "(sec)")
         logger.info("モデル学習完了")
 
         # TODO １ユーザに対して最大でもX回までしか評価しないようにtestセットから除く
