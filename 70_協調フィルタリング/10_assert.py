@@ -54,12 +54,13 @@ def get_predict_item_top_n(model,user_id,item_list, n):
     
     # item_idとスコアのリスト [('0000002', 1.4807729911119272), ('0000003', 1.4807729911119272)]
     sorted_dic = sorted(predict_item_dic.items(), key=lambda x:x[1], reverse=True)[:n]
-    logger.info("予想アイテム:"+str(sorted_dic))
     # item_idのみのリストとして返却
     return [item_id_tapple[0] for item_id_tapple in sorted_dic]
 
 def is_hit(model, user_id,item_id,item_list):
+    predict_start = time.time()
     predict_item = get_predict_item_top_n(model,user_id,item_list,10)
+    logger.info("[PREDICT TIME]:{0:.5f}".format(time.time() - predict_start) + "(sec)")
     logger.info("user_id:"+user_id+" buy_item_id:"+item_id+" predict_items:" + str(predict_item))
     if item_id in predict_item: return True
                 
@@ -82,7 +83,7 @@ def main():
         # TODO １ユーザに対して最大でもX回までしか評価しないようにtestセットから除く
         hit_count=0
         futures = []
-
+        # TODO 結局マルチスレッドでも処理速度は上がらなかったため除去
         with ThreadPoolExecutor(max_workers=8, thread_name_prefix="thread") as executor:
             for test_data in testset:
                 user_id = '{:07d}'.format(int(test_data[0]))

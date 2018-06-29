@@ -1,26 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-    モデルの構築から検証までを一括して行う。
-行列因子分解（Matrix Factorization）モデル
-    ユーザ・アイテム行列をユーザ行列（user × k）とアイテム行列（item × k）に分解する際、既に値があるセルの値の誤差が最小になるようにする
-        分解した後の行列の積をとって元に戻した際、値の入っていなかったセルに値が入っており、その値を評価値とする
-    特異値分解（SVD：Singular Value Decomposition）
-    非負値行列因子分解（NMF：Non-negative Matrix Factorization）
-        SVDと異なり、分解した行列の要素が全て正の数
-        交互最小二乗法（ALS：Alternative Least Squares）や確率的勾配降下法（SGD：Stochastic Gradient Descent）を用いて実施
-クラスタモデル
-    嗜好が類似した利用者のグループごとに推薦をする
-関数モデル
-    利用者の嗜好パターンから，アイテムの評価値を予測する関数
-確率モデル
-    行動分布型：どの利用者が，どのアイテムを，どう評価したかの分布をモデル化
-    評価分布型：全アイテムに対する評価値の同時分布をモデル化
-    ナイーブベイズ、ベイジアンネットワークなど
-時系列モデル
-    マルコフ過程：アイテムを評価した時間的順序も考慮
-    マルコフ決定過程(MDP：Markov Decision Process)：加えて，利用者の行動もモデル化
-    https://qiita.com/ysekky/items/c81ff24da0390a74fc6c
+    scikit-surpriseのドキュメントを参考に実装
+    model.testメソッドで評価行列を得ている？大量のメモリが必要。
 """
 
 # 共通
@@ -46,9 +28,7 @@ def init_logger():
     logger.addHandler(handler)
     logger.setLevel(INFO)
 
-
 def get_top_n(predictions, n=10):
-
     # First map the predictions to each user.
     top_n = defaultdict(list)
     for uid, iid, true_r, est, _ in predictions:
@@ -64,7 +44,7 @@ def get_top_n(predictions, n=10):
 def is_hit(predictions, user_id,item_id):
     predict_start = time.time()
     top_n = get_top_n(predictions, n=10)
-    logger.info("[PREDICT TIME]:{0:.5f}".format(time.time() - predict_start) + "(sec)")
+    logger.debug("[PREDICT TIME]:{0:.5f}".format(time.time() - predict_start) + "(sec)")
     logger.info("user_id:"+user_id+" buy_item_id:"+item_id+" predict_items:" + str(top_n[user_id]))
     if item_id in top_n[user_id]: return True
                 
@@ -90,10 +70,9 @@ def main():
         predictions = model.test(trainset.build_anti_testset())
         # for uid, user_ratings in top_n.items():
         #     print(uid, [iid for (iid, _) in user_ratings])
-            
-        # TODO １ユーザに対して最大でもX回までしか評価しないようにtestセットから除く
         hit_count=0
         futures = []
+        # TODO 結局マルチスレッドでも処理速度は上がらなかったため除去
         with ThreadPoolExecutor(max_workers=8, thread_name_prefix="thread") as executor:
             for test_data in testset:
                 user_id = '{:07d}'.format(int(test_data[0]))

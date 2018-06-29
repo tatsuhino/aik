@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-    モデル学習用のデータ整形処理
+    データカウントするだけ
 """
-
 
 # 共通
 import time
 from logging import StreamHandler, Formatter, INFO,getLogger
+import collections
 from collections import defaultdict
 
 # 定数
@@ -51,7 +51,6 @@ def eval_score(all_data):
 
 # Datasetロード用に'ユーザID アイテムID 評価値'のフォーマットへ変換してファイルに出力する
 def convert(input_file_name):
-
     all_data = {}
     with open(input_file_name, mode='r') as f:
         lines = f.readlines()
@@ -66,11 +65,37 @@ def convert(input_file_name):
             all_data[key].setdefault("event", [])
             all_data[key]["event"].append(columns[1])
 
+    scored_data = eval_score(all_data)
+    user_event_list=[]
+    item_event_list=[]
+    for line in scored_data : 
+        user_event_list.append(line["user_id"])
+        item_event_list.append(line["item_id"])
+    
+    user_count = collections.Counter(user_event_list)
+    user={}
+    for k,v in user_count.items() : 
+        user.setdefault(v, [])
+        user[v].append(k)
+    
+    output_user_file_name = input_file_name + '_user_count' # 変換後のファイル名
+    with open(output_user_file_name, mode='w') as f:
+        for k,v in user.items() : 
+            f.write('{} {}\n'.format(k, len(v)))
+
+    item_count = collections.Counter(item_event_list)
+    item={}
+    for k,v in item_count.items() : 
+        item.setdefault(v, [])
+        item[v].append(k)
+    
+    output_item_file_name = input_file_name + '_item_count' # 変換後のファイル名
+    with open(output_item_file_name, mode='w') as f:
+        for k,v in item.items() : 
+            f.write('{} {}\n'.format(k, len(v)))
+
     # ファイル出力
-    output_file_name = input_file_name + '_converted' # 変換後のファイル名
-    with open(output_file_name, mode='w') as f:
-        for line in eval_score(all_data) : 
-            f.write('{0:07d} {1:07d} {2:01d}\n'.format(int(line["user_id"]), int(line["item_id"]), int(line["score"])))
+
 
 def main():
     convert(BASE_DIR + './events.csv')
