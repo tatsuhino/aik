@@ -1,70 +1,52 @@
-## €”õ
-import gensim
-import time
-from gensim import models
-model = models.Doc2Vec.load('model')
-#from gensim.models.doc2vec import TaggedDocument
+## æº–å‚™
 
-print(model.docvecs.doctags)
+æ–‡æ›¸ã®ãƒ†ã‚­ã‚¹ãƒˆåŒ–ï¼‹åˆ†ã‹ã¡æ›¸ãï¼‹Doc2Vecãƒ¢ãƒ‡ãƒ«ã®å­¦ç¿’ã¯ã€ä»¥ä¸‹ã®è¨˜äº‹ã‚’å‚ç…§ã€‚
+http://tadaoyamaoka.hatenablog.com/entry/2017/04/29/122128
+â€»ãƒ†ã‚­ã‚¹ãƒˆåŒ–ã«ã¯apache tikaã‚’ä½¿ç”¨
 
 
-
-start = time.time()
-print(model.docvecs.most_similar('./aozora/tika/XXXX.xls_tika.txt',topn=10))
-elapsed_time = time.time() - start
-print ("elapsed_time:{0}".format(elapsed_time) + "[sec]")
-
-
-for x in dir(model):
-  print(x)
-
-
-##Word2Vec‚Ì‹@”\‚ğ‚µ‚Ä‚İ‚é
-# “ú–{‚É—‚Ä‚¢‚é’PŒê‚ğo‚µ‚Ä‚İ‚é
-print(model.most_similar(positive="ƒVƒXƒeƒ€", topn=10))
-print(model.most_similar(positive="ƒvƒƒOƒ‰ƒ€", topn=10))
+# Word2Vecã®æ©Ÿèƒ½ã‚’è©¦ã—ã¦ã¿ã‚‹
+## ä¼¼ã¦ã„ã‚‹å˜èªãƒ™ã‚¯ãƒˆãƒ«ã‚’å‡ºåŠ›
+```
+# é¡ä¼¼å˜èªãƒ™ã‚¯ãƒˆãƒ«ã®å–å¾—
+from gensim.models import word2vec
+model   = word2vec.Word2Vec.load('wordmodel')
+print(model.most_similar(positive="ã‚·ã‚¹ãƒ†ãƒ ", topn=10))
+print(model.most_similar(positive="ãƒ—ãƒ­ã‚°ãƒ©ãƒ ", topn=10))
 print(model.most_similar(positive="BASICS", topn=10))
+```
 
-# ƒq[ƒ{—|’jiƒqƒƒCƒ“‚ªo‚é‚±‚Æ‚ğŠú‘Òj
-print(model.most_similar(positive=["ƒq[ƒ[","—"],negative=["’j"], topn=10))
+## å˜èªãƒ™ã‚¯ãƒˆãƒ«ã®åŠ æ¸›ç®—ã€€ãƒ’ãƒ¼ãƒ­ï¼‹å¥³ï¼ç”·ï¼ˆãƒ’ãƒ­ã‚¤ãƒ³ãŒå‡ºã‚‹ã“ã¨ã‚’æœŸå¾…ï¼‰
+```
+print(model.most_similar(positive=["ãƒ’ãƒ¼ãƒ­ãƒ¼","å¥³"],negative=["ç”·"], topn=10))
+print(model.most_similar(positive=['å¥³', 'å›½ç‹'], negative=['ç”·'], topn=10))
+```
 
-print(model.most_similar(positive=['—', '‘‰¤'], negative=['’j'], topn=10))
-
-
-##Doc2Vec‚Ì‹@”\‚ğ‚µ‚Ä‚İ‚é
-# ƒ‚ƒfƒ‹‚É“o˜^‚µ‚Ä‚¢‚é‚·‚×‚Ä‚Ìƒ^ƒO‚ğ•\¦
-print(model.docvecs.doctags)
-# —Ş—•¶ÍŒŸõ‚ğ‚µ‚Ä‚İ‚é
-print(model.docvecs.most_similar('./aozora/Ğ“àdoc/“d˜b”Ô†ˆê——.txt',topn=10,clip_start =115168))
-print(model.docvecs.most_similar('./aozora/Â‹ó•¶ŒÉ/•Ÿ‘ò—@‹g/ƒAƒƒŠƒJ“Æ—§éŒ¾.txt',topn=10,clip_start =115168))
-
-##Doc2Vec‚ÌƒIƒ“ƒ‰ƒCƒ“ŠwK
-
-add_doc=TaggedDocument(words=['mogemoge','hugahuga'], tags=['NEW_DOC1'])
-model.build_vocab([add_doc], update=True)
-model.docvecs.reset_weights(model)
-model.train([add_doc],total_examples=model.corpus_count, epochs=model.iter)
-print(model.docvecs.doctags)#NEW_DOC1‚ª’Ç‰Á‚³‚ê‚Ä‚¢‚é‚Í‚¸
-print(model.docvecs.most_similar('SENT1',topn=10,clip_start =115168))
-
-
-
-ƒ“o˜^‚Ì‚È‚¢’PŒê„
+# Doc2Vecã®æ©Ÿèƒ½ã‚’è©¦ã—ã¦ã¿ã‚‹
+## ãƒ¢ãƒ‡ãƒ«ã«ç™»éŒ²ã—ã¦ã„ã‚‹ã™ã¹ã¦ã®ã‚¿ã‚°ã‚’è¡¨ç¤º
+```
+import gensim
 from gensim import models
+from gensim.models.doc2vec import TaggedDocument
+model = models.Doc2Vec.load('model') #ãƒ¢ãƒ‡ãƒ«ã®èª­è¾¼
+print(model.docvecs.doctags) # Doc2Vecã«ç™»éŒ²ã•ã‚Œã¦ã„ã‚‹ã‚¿ã‚°ã®ä¸€è¦§ã‚’è¡¨ç¤º
+
+print(model.docvecs.doctags)
+```
+## é¡ä¼¼æ–‡ç« æ¤œç´¢ã‚’ã—ã¦ã¿ã‚‹
+```
+print(model.docvecs.most_similar('./doc/ç¤¾å†…/é›»è©±ç•ªå·ä¸€è¦§.txt',topn=10,clip_start =115168))
+print(model.docvecs.most_similar('./doc/é’ç©ºæ–‡åº«/ç¦æ²¢è«­å‰/ã‚¢ãƒ¡ãƒªã‚«ç‹¬ç«‹å®£è¨€.txt',topn=10,clip_start =115168))
+```
+
+## è¿½åŠ å­¦ç¿’
+```
 model = models.Doc2Vec.load('model')
+# hoge,hugaã¨ã„ã†å†…å®¹ã®æ–‡æ›¸ã‚’NEW_DOC1ã¨ã„ã†ã‚¿ã‚°ã§è¿½åŠ å­¦ç¿’
+add_doc=TaggedDocument(words=['hoge','huga'], tags=['NEW_DOC1'])
 
-print(model.infer_vector("hogehoge"))
-print(model.docvecs.most_similar([model.infer_vector("hogehoge")],topn=1000))
-
-
-
-
-model.train(sentences, updated_count, epochs=model.iter)
-
-ƒ“o˜^‚Ì‚È‚¢’PŒê‚Ì’Ç‰Á„
-add_doc=TaggedDocument(words=['mogemoge','hugahuga'], tags=['SENT1'])
-add_doc=TaggedDocument(words=['hino','tatsuya'], tags=['SENT2'])
-add_doc=TaggedDocument(words=['sinagawa','tatsuya'], tags=['SENT3'])
 model.build_vocab([add_doc], update=True)
 model.docvecs.reset_weights(model)
 model.train([add_doc],total_examples=model.corpus_count, epochs=model.iter)
+print(model.docvecs.doctags) #NEW_DOC1ãŒè¿½åŠ ã•ã‚Œã¦ã„ã‚‹ã¯ãš
+```
